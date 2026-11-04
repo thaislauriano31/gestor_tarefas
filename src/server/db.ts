@@ -5,12 +5,19 @@ export interface Tarefa {
   dataCriacao: Date;
 }
 
+const globalForDb = globalThis as unknown as {
+  tarefasDB: Tarefa[] | undefined;
+};
+
 // Array global em memória inicializado com alguns dados de exemplo
-export const tarefasDB: Tarefa[] = [
-  {
-    id: "1",
-    titulo: "Compras supermercado",
+export const tarefasDB =
+  globalForDb.tarefasDB ?? [
+    {
+      id: "1",
+      titulo: "Compras supermercado",
     descricao: "Comprar pão, leite e ovos",
-    dataCriacao: new Date(),
-  },
-];
+      dataCriacao: new Date(),
+    },
+  ];
+
+globalForDb.tarefasDB = tarefasDB;

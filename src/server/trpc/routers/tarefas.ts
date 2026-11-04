@@ -20,4 +20,24 @@ export const tarefasRouter = router({
 
       return { items, nextCursor };
     }),
+
+    // Criar Tarefa
+  criar: publicProcedure
+    .input(
+      z.object({
+        titulo: z.string().min(1, "O título é obrigatório"),
+        descricao: z.string().optional(),
+      })
+    )
+    .mutation(({ input }) => {
+      const novaTarefa: Tarefa = {
+        id: Date.now().toString(),
+        titulo: input.titulo,
+        descricao: input.descricao,
+        dataCriacao: new Date(),
+      };
+      tarefasDB.unshift(novaTarefa);
+      return novaTarefa;
+    }),
+
 });
