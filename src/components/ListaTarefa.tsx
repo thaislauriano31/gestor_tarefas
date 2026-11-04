@@ -2,14 +2,14 @@
 
 import type { Tarefa } from '@/server/db';
 
-interface ClientTaskListProps {
+interface ListaTarefaProps {
   dadosIniciais: {
     items: Tarefa[];
     nextCursor?: number;
   };
 }
 
-export default function ClientTaskList({ dadosIniciais }: ClientTaskListProps) {
+export default function ListaTarefa({ dadosIniciais }: ListaTarefaProps) {
   return (
     <div className="space-y-4">
       {dadosIniciais.items.length === 0 ? (
