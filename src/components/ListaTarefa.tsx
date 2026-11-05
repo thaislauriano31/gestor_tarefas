@@ -1,5 +1,5 @@
 'use client';
-
+import Link from 'next/link';
 import type { Tarefa } from '@/server/db';
 import { trpc } from '@/trpc/client';
 import { useRouter } from 'next/dist/client/components/navigation';
@@ -62,13 +62,21 @@ export default function ClientTaskList({ dadosIniciais }: ListaTarefaProps) {
                 Criado em: {new Date(tarefa.dataCriacao).toLocaleDateString()}
               </span>
             </div>
-            <button
-              onClick={() => handleDeletar(tarefa.id)}
-              disabled={idEmExclusao === tarefa.id}
-              className="px-3 py-1.5 bg-red-600 text-white hover:bg-red-800 rounded-md text-sm font-medium disabled:opacity-50 transition-colors shrink-0"
-            >
-              {idEmExclusao === tarefa.id ? 'Excluindo...' : 'Excluir'}
-            </button>
+            <div className="flex space-x-2">
+              <Link
+                  href={`/tarefas/${tarefa.id}`}
+                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium transition-colors"
+                >
+                  Editar
+                </Link>
+              <button
+                onClick={() => handleDeletar(tarefa.id)}
+                disabled={idEmExclusao === tarefa.id}
+                className="px-3 py-1.5 bg-red-600 text-white hover:bg-red-800 rounded-md text-sm font-medium disabled:opacity-50 transition-colors shrink-0"
+              >
+                {idEmExclusao === tarefa.id ? 'Excluindo...' : 'Excluir'}
+              </button>
+            </div>
           </div>
         ))
       )}

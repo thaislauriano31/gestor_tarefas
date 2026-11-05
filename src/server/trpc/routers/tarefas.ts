@@ -51,4 +51,37 @@ export const tarefasRouter = router({
       const [removida] = tarefasDB.splice(index, 1);
       return removida;
     }),
+
+  // Buscar por ID (para preencher edição)
+  buscarPorId: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(({ input }) => {
+      const tarefa = tarefasDB.find((t) => t.id === input.id);
+      if (!tarefa) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Tarefa não encontrada' });
+      }
+      return tarefa;
+    }),
+
+  // Atualizar Tarefa
+  atualizar: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        titulo: z.string().min(1, "O título é obrigatório"),
+        descricao: z.string().optional(),
+      })
+    )
+    .mutation(({ input }) => {
+      const index = tarefasDB.findIndex((t) => t.id === input.id);
+      if (index === -1) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Tarefa não encontrada para atualização' });
+      }
+      tarefasDB[index] = {
+        ...tarefasDB[index],
+        titulo: input.titulo,
+        descricao: input.descricao,
+      };
+      return tarefasDB[index];
+    }),
 });
