@@ -21,7 +21,7 @@ export const tarefasRouter = router({
       return { items, nextCursor };
     }),
 
-    // Criar Tarefa
+  // Criar Tarefa
   criar: publicProcedure
     .input(
       z.object({
@@ -40,4 +40,15 @@ export const tarefasRouter = router({
       return novaTarefa;
     }),
 
+  // Deletar Tarefa
+  deletar: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(({ input }) => {
+      const index = tarefasDB.findIndex((t) => t.id === input.id);
+      if (index === -1) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Tarefa não encontrada' });
+      }
+      const [removida] = tarefasDB.splice(index, 1);
+      return removida;
+    }),
 });
