@@ -3,7 +3,7 @@ import Link from 'next/link';
 import type { Tarefa } from '@/server/db';
 import { trpc } from '@/trpc/client';
 import { useRouter } from 'next/dist/client/components/navigation';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface ListaTarefaProps {
   dadosIniciais: {
@@ -14,9 +14,28 @@ interface ListaTarefaProps {
 
 export default function ClientTaskList({ dadosIniciais }: ListaTarefaProps) {
   const router = useRouter();
+  const observerRef = useRef<HTMLDivElement | null>(null);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
   const [idEmExclusao, setIdEmExclusao] = useState<string | null>(null);
+
+  // Hook de busca infinita do tRPC
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch
+  } = trpc.tarefas.listar.useInfiniteQuery(
+    { limit: 5 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      initialData: {
+        pages: [dadosIniciais],
+        pageParams: [0],
+      } as any,
+    }
+  );
 
   // Hook da mutation de exclusão no tRPC
   const deletarTarefa = trpc.tarefas.deletar.useMutation({
@@ -36,12 +55,32 @@ export default function ClientTaskList({ dadosIniciais }: ListaTarefaProps) {
     },
   });
 
+  // Intersection Observer para detetar quando o utilizador chega ao fim da página
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   const handleDeletar = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
     
     setIdEmExclusao(id);
     deletarTarefa.mutate({ id });
   };
+
+  const todasAsTarefas = data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="space-y-4">
@@ -53,10 +92,10 @@ export default function ClientTaskList({ dadosIniciais }: ListaTarefaProps) {
             key={tarefa.id} 
             className="p-4 rounded-lg shadow-sm flex justify-between items-center bg-gray-900"
           >
-            <div>
-              <h3 className="font-semibold text-lg text-white">{tarefa.titulo}</h3>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-lg text-white truncate">{tarefa.titulo}</h3>
               {tarefa.descricao && (
-                <p className="text-gray-200 text-sm">{tarefa.descricao}</p>
+                <p className="text-gray-200 text-sm line-clamp-2">{tarefa.descricao}</p>
               )}
               <span className="text-xs text-gray-400">
                 Criado em: {new Date(tarefa.dataCriacao).toLocaleDateString()}
@@ -80,6 +119,11 @@ export default function ClientTaskList({ dadosIniciais }: ListaTarefaProps) {
           </div>
         ))
       )}
+      <div ref={observerRef} className="py-4 text-center">
+        {isFetchingNextPage && (
+          <p className="text-sm text-gray-500 animate-pulse">Carregando mais tarefas...</p>
+        )}
+      </div>
     </div>
   );
 }

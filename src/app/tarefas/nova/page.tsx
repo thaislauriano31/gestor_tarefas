@@ -8,7 +8,6 @@ export default function NovaTarefaPage() {
   const router = useRouter();
   const criarTarefa = trpc.tarefas.criar.useMutation({
     onSuccess: () => {
-      // Redireciona e atualiza a lista SSR
       router.push('/');
       router.refresh();
     },
@@ -22,6 +21,7 @@ export default function NovaTarefaPage() {
     <main className="max-w-2xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Nova Tarefa</h1>
       <FormTarefa
+        key={Date.now()}
         onSubmit={handleCreate}
         isLoading={criarTarefa.isPending}
         submitButtonText="Criar Tarefa"
